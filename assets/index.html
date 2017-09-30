@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <title>DICOM</title>
+        <script src="/static/js/jquery.js"></script>
+        <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+        <script src="/static/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+              <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                  <span class="sr-only">Toggle navigation</span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">DICOM</a>
+              </div>
+              <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="navbar-form navbar-left">
+                  <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search" style="width: 200px" id="search_input">
+                  </div>
+                  <button type="button" class="btn btn-default" onclick="search()">Search</button>
+                </div>
+              </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+          </nav>
+          <div>
+                <span style="float: left;margin-left: 10px;font-weight:600;font-size: 20">
+                        All:  <span id="all_count" style="color: blue">0</span>
+                  </span>
+                  <span style="float: left;margin-left: 10px;font-weight:600;font-size: 20">
+                        current:  <span id="total" style="color: blue">0</span>
+                  </span>
+          </div>
+          <div style="width: 70%;margin-left: 10%;margin-top: 4%">
+            <table class="table table-hover">
+                <tbody  id="the_tr">
+                    <tr>
+                        <th>#</th>
+                        <th>Patient's Name</th>
+                        <th>Patient's Sex</th>
+                        <th>Institution Name</th>
+                        <th>Body Part Examined</th>
+                        <th>SOP Instance UID</th>
+                        <th>Modality</th>
+                        <th>Score</th>
+                        <th></th>
+                    </tr>
+                </tbody>
+                
+              </table>
+          </div>
+          <script>
+              var search = function(){
+                var search_input = $("#search_input").val();
+                $.ajax({
+                        url:'/search',
+                        dataType:'json',
+                        data: {"search_input":search_input},
+                        success: function(data){
+                            $("#all_count").html(data.hits.total);
+                            $("#total").html(data.hits.hits.length);
+                            console.log(data);
+                            $(".data").remove();
+                            if(data.hits.hits.length==0){
+                                $("#the_tr").append("<tr class='data' style='text-align:center'> <td colspan=9>( Empty )</td> </tr>");
+                            }
+                            $(data.hits.hits).each(function(i,e){
+                                $("#the_tr").append("<tr class='data'> <td>"+(i+1)+"</td><td>"+e._source["Patient's Name"]+"</td><td>"+e._source["Patient's Sex"]+"</td><td>"+e._source["Institution Name"]+"</td><td>"+e._source["Body Part Examined"]+"</td><td>"+e._source["Media Storage SOP Instance UID"]+"</td><td>"+e._source["Modality"]+"</td><td>"+e._score+"</td><td><span class='glyphicon glyphicon-download-alt' aria-hidden='true'></span></td> </tr>");
+                            });
+                        }
+                    });
+              };
+              $('#search_input').bind('keypress',function(event){  
+                if(event.keyCode == "13"){  
+                    search();
+                }  
+             });  
+              search();
+          </script>
+    </body>
+</html>
