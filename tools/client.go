@@ -3,9 +3,12 @@ package tools
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 // DICOMResult DICOMResult
@@ -28,25 +31,41 @@ func Query(data []byte) ([]byte, error) {
 	body := bytes.NewReader(data)
 	request, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		log.Println("http.NewRequest,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.NewRequest,[err=%s][url=%s]", err, url)
 		return []byte(""), err
 	}
 	request.Header.Set("content-type", "application/json; charset=UTF-8")
 	var resp *http.Response
 	resp, err = http.DefaultClient.Do(request)
 	if err != nil {
-		log.Println("http.Do failed,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.Do failed,[err=%s][url=%s]", err, url)
 		return []byte(""), err
 	}
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("http.Do failed,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.Do failed,[err=%s][url=%s]", err, url)
 	}
 	return b, err
 }
 
-// Save Save
+// ProcessResult 处理ES返回的字符串（可选择返回字段）
+func ProcessResult(fields string, data []byte) ([]byte, error) {
+	resultMaps := make([]map[string]string, 0)
+	strs := strings.Split(fields, ",")
+	hits := gjson.Get(string(data), "hits.hits.#._source")
+	for _, hit := range hits.Array() {
+		hitMap := hit.Map()
+		newMap := make(map[string]string)
+		for _, s := range strs {
+			newMap[s] = hitMap[s].String()
+		}
+		resultMaps = append(resultMaps, newMap)
+	}
+	return json.Marshal(resultMaps)
+}
+
+// Save 保存DICOM信息到ES
 func Save(data []byte) ([]byte, error) {
 	var obj DICOMResult
 	json.Unmarshal(data, &obj) // 解析
@@ -56,20 +75,20 @@ func Save(data []byte) ([]byte, error) {
 	body := bytes.NewReader(data)
 	request, err := http.NewRequest("PUT", url, body)
 	if err != nil {
-		log.Println("http.NewRequest,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.NewRequest,[err=%s][url=%s]", err, url)
 		return []byte(""), err
 	}
 	request.Header.Set("content-type", "application/json; charset=UTF-8")
 	var resp *http.Response
 	resp, err = http.DefaultClient.Do(request)
 	if err != nil {
-		log.Println("http.Do failed,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.Do failed,[err=%s][url=%s]", err, url)
 		return []byte(""), err
 	}
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("http.Do failed,[err=%s][url=%s]", err, url)
+		fmt.Printf("http.Do failed,[err=%s][url=%s]", err, url)
 	}
 	return b, err
 }

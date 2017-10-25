@@ -54,6 +54,9 @@
               </table>
           </div>
           <script>
+              var download_file = function(path){
+                window.location.href = "/download?file_path="+path;
+              };
               var search = function(){
                 var search_input = $("#search_input").val();
                 $.ajax({
@@ -69,7 +72,7 @@
                                 $("#the_tr").append("<tr class='data' style='text-align:center'> <td colspan=9>( Empty )</td> </tr>");
                             }
                             $(data.hits.hits).each(function(i,e){
-                                $("#the_tr").append("<tr class='data'> <td>"+(i+1)+"</td><td>"+e._source["Patient's Name"]+"</td><td>"+e._source["Patient's Sex"]+"</td><td>"+e._source["Institution Name"]+"</td><td>"+e._source["Body Part Examined"]+"</td><td>"+e._source["Media Storage SOP Instance UID"]+"</td><td>"+e._source["Modality"]+"</td><td>"+e._score+"</td><td><span class='glyphicon glyphicon-download-alt' aria-hidden='true'></span></td> </tr>");
+                                $("#the_tr").append("<tr class='data'> <td>"+(i+1)+"</td><td>"+e._source["Patient's Name"]+"</td><td>"+e._source["Patient's Sex"]+"</td><td>"+e._source["Institution Name"]+"</td><td>"+e._source["Body Part Examined"]+"</td><td>"+e._source["Media Storage SOP Instance UID"]+"</td><td>"+e._source["Modality"]+"</td><td>"+e._score+"</td><td><span class='glyphicon glyphicon-download-alt' aria-hidden='true' style='cursor: pointer' onclick='download_file(\""+e._source["File Path"]+"\")'></span></td> </tr>");
                             });
                         }
                     });
